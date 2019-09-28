@@ -10,6 +10,8 @@ Configuration module for Actionista for Todoist package and CLIs/apps.
 import os
 import yaml
 
+from pathlib import Path
+
 
 # You can use the "precision" notation to truncate long strings during
 # string formatting, e.g. "{field:minwidth.maxwidth}"
@@ -56,10 +58,12 @@ FILEPATHS = {
 def get_config_file(name='config'):
     fn_cands = FILEPATHS[name]
     fn_cands = map(os.path.expanduser, fn_cands)
-    try:
-        return next(cand for cand in fn_cands if os.path.isfile(cand))
-    except StopIteration:
-        return None
+    for cand in fn_cands:
+        if not os.path.isfile(cand):
+            Path(cand).touch()
+            return cand
+        else:
+            return cand
 
 
 def get_config(config_fn=None):
@@ -78,6 +82,9 @@ def get_config_and_filepath():
         return None, None
     with open(config_fn) as fp:
         config = yaml.safe_load(fp)
+    # default to an empty dictionary
+    if config is None:
+        config = {}
     return config, config_fn
 
 
